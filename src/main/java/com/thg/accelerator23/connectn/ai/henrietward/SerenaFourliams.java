@@ -52,8 +52,12 @@ public class SerenaFourliams extends Player {
         // Simulate the opponent making a move in this column
         long newOpponentBoard = applyMove(opponentBoard, col);
 
+        System.out.println("Simulating opponent move in column: " + col);
+        System.out.println("New opponent board: " + Long.toBinaryString(newOpponentBoard));
+
         // Check if this move results in a win for the opponent
         if (hasWon(newOpponentBoard)) {
+          System.out.println("Blocking opponent win at column: " + col);
           return col; // Block this column
         }
       }
@@ -148,15 +152,17 @@ public class SerenaFourliams extends Player {
 
   private long applyMove(long board, int col) {
     long columnMask = getColumnMask(col);
-    // Find the lowest empty row in the column
-    long lowestEmptyRow = (~(board | columnMask)) & columnMask;
-    // Place the piece in the lowest empty row
-    return board | (lowestEmptyRow & columnMask);
+    long lowestEmptyRow = (~board) & columnMask; // Find empty spots in the column
+    if (lowestEmptyRow == 0) {
+      throw new IllegalStateException("Column is full: " + col);
+    }
+    long movePosition = Long.lowestOneBit(lowestEmptyRow); // Get the lowest empty bit
+    return board | movePosition;
   }
 
   private long getColumnMask(int col) {
-    // Generate a mask for a column (6 bits per column in a 7-column board)
-    return 0x3FFL << (col * 10);
+    int height = 8; // Correct height
+    return (1L << height) - 1 << (col * height);
   }
 
   private int evaluateBoard(long playerBoard, long opponentBoard) {
@@ -207,9 +213,8 @@ public class SerenaFourliams extends Player {
 
   // Central column control adds a bonus
   private int centralControl(long board) {
-    int centerColumn = 5; // Assuming 0-based index
-    long centerMask = 0b0001000L << (centerColumn * 10); // Center column mask
-    return Long.bitCount(board & centerMask) * 20; // +20 for each piece in the center
+    long centerMask = (0b10000L | 0b100000L) << (4 * 8); // Center two columns
+    return Long.bitCount(board & centerMask) * 20;
   }
 
   // Generate all winning patterns (4 in a row horizontally, vertically, diagonally)
