@@ -186,10 +186,14 @@ public class SerenaFourliams extends Player {
 
       if (count == 4) {
         score += 100000; // Winning line
-      } else if (count == 3 && (matchingPieces & ~board) != 0) {
-        score += 1000; // Open 3
-      } else if (count == 2 && (matchingPieces & ~board) != 0) {
-        score += 10; // Open 2
+      } else if (count == 3) {
+        if ((matchingPieces & ~board) != 0) {
+          score += 1000; // Open 3
+        }
+      } else if (count == 2) {
+        if ((matchingPieces & ~board) != 0) {
+          score += 10;
+        }
       }
     }
 
@@ -238,7 +242,7 @@ public class SerenaFourliams extends Player {
     for (int row = 3; row < height; row++) {
       for (int col = 0; col <= width - 4; col++) {
         long pattern = 0b1L | (0b1L << 9) | (0b1L << 18) | (0b1L << 27); // Diagonal spacing
-        pattern <<= ((row * width) + col - 27); // Correct the shift
+        pattern <<= ((row * width) + col );
         patterns.add(pattern);
       }
     }
