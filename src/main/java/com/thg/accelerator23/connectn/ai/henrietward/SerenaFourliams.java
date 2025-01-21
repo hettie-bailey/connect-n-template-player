@@ -97,7 +97,9 @@ public class SerenaFourliams extends Player {
 
     int bestValue = isMaximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
-    for (int col = 0; col < 10 ; col++) {
+    int[] columnOrder = {4, 3, 5, 2, 6, 1, 7, 0, 8, 9}; //changing priority search to emphasize the center position
+
+    for (int col : columnOrder) {
       if (isColumnPlayable(playerBoard, opponentBoard, col)) {
         long newPlayerBoard, newOpponentBoard;
 
@@ -112,6 +114,8 @@ public class SerenaFourliams extends Player {
         int value = minimax(
                 newPlayerBoard, newOpponentBoard, depth - 1, alpha, beta, !isMaximizingPlayer
         );
+
+        System.out.println("Column: " + col + ", Score: " + value);
 
         if (isMaximizingPlayer) {
           bestValue = Math.max(bestValue, value);
@@ -190,14 +194,12 @@ public class SerenaFourliams extends Player {
   private int centralControl(long board) {
     int centerColumn = 5; // Assuming 0-based index
     long centerMask = 0b0001000L << (centerColumn * 10); // Center column mask
-    return Long.bitCount(board & centerMask) * 5; // +5 for each piece in the center
+    return Long.bitCount(board & centerMask) * 50; // +50 for each piece in the center
   }
 
   // Generate all winning patterns (4 in a row horizontally, vertically, diagonally)
   private long[] generateWinningPatterns(int width, int height) {
     List<Long> patterns = new ArrayList<>();
-//    int width = board.getConfig().getWidth();
-//    int height = board.getConfig().getHeight();
 
     // Horizontal
     for (int row = 0; row < height; row++) {
@@ -261,6 +263,7 @@ public class SerenaFourliams extends Player {
   }
 
 }
+
 
 
 
