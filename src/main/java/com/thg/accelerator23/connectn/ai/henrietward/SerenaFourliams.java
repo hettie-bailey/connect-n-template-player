@@ -21,16 +21,16 @@ public class SerenaFourliams extends Player {
     long opponentBoard = convertToBitboard(board, this.getCounter().getOther());
 
     // Delegate to the bitboard-based makeMove method
-    return makeMove(playerBoard, opponentBoard);
+    return makeMove(board, playerBoard, opponentBoard);
   }
 
-  public int makeMove(long playerBoard, long opponentBoard) {
+  public int makeMove(Board board, long playerBoard, long opponentBoard) {
     int bestMove = -1;
     int bestValue = Integer.MIN_VALUE;
     int alpha = Integer.MIN_VALUE;
     int beta = Integer.MAX_VALUE;
 
-    for (int col = 0; col < 10 ; col++) { // Assuming a 7-column board
+    for (int col = 0; col < board.getConfig().getWidth() ; col++) {
       if (isColumnPlayable(playerBoard, opponentBoard, col)) {
         long newPlayerBoard = applyMove(playerBoard, col);
 
@@ -124,7 +124,7 @@ public class SerenaFourliams extends Player {
 
   private long getColumnMask(int col) {
     // Generate a mask for a column (6 bits per column in a 7-column board)
-    return 0xFFL << (col * 8);
+    return 0x3FFL << (col * 10);
   }
 
   private int evaluateBoard(long playerBoard, long opponentBoard) {
@@ -142,9 +142,11 @@ public class SerenaFourliams extends Player {
 
   private int evaluatePosition(long board) {
     int score = 0;
+    int width = 10;
+    int height = 8;
 
     // Winning patterns for Connect 4 (all possible 4-in-a-row patterns)
-    long[] patterns = generateWinningPatterns();
+    long[] patterns = generateWinningPatterns(width, height);
 
     for (long pattern : patterns) {
       long matchingPieces = board & pattern;
@@ -166,46 +168,48 @@ public class SerenaFourliams extends Player {
 
   // Central column control adds a bonus
   private int centralControl(long board) {
-    int centerColumn = 3; // Assuming 0-based index
-    long centerMask = 0b0001000L << (centerColumn * 6); // Center column mask
+    int centerColumn = 5; // Assuming 0-based index
+    long centerMask = 0b0001000L << (centerColumn * 10); // Center column mask
     return Long.bitCount(board & centerMask) * 3; // +3 for each piece in the center
   }
 
   // Generate all winning patterns (4 in a row horizontally, vertically, diagonally)
-  private long[] generateWinningPatterns() {
+  private long[] generateWinningPatterns(int width, int height) {
     List<Long> patterns = new ArrayList<>();
+//    int width = board.getConfig().getWidth();
+//    int height = board.getConfig().getHeight();
 
     // Horizontal
-    for (int row = 0; row < 6; row++) {
-      for (int col = 0; col < 4; col++) {
-        long pattern = 0b1111L << (row + col * 6);
+    for (int row = 0; row < height; row++) {
+      for (int col = 0; col <= width - 4; col++) { // Allow patterns to fully fit
+        long pattern = 0b1111L << (row * width + col);
         patterns.add(pattern);
       }
     }
 
     // Vertical
-    for (int col = 0; col < 7; col++) {
-      for (int row = 0; row < 3; row++) {
-        long pattern = 0b1L | (0b1L << 6) | (0b1L << 12) | (0b1L << 18);
-        pattern <<= (row + col * 6);
+    for (int col = 0; col < width ; col++) {
+      for (int row = 0; row < height - 4; row++) {
+        long pattern = 0b1L | (0b1L << 10) | (0b1L << 20) | (0b1L << 30);
+        pattern <<= (row * 10 + col);
         patterns.add(pattern);
       }
     }
 
     // Diagonal /
-    for (int row = 0; row < 3; row++) {
-      for (int col = 0; col < 4; col++) {
-        long pattern = 0b1L | (0b1L << 7) | (0b1L << 14) | (0b1L << 21);
-        pattern <<= (row + col * 6);
+    for (int row = 0; row <= height - 4; row++) {
+      for (int col = 0; col <= width - 4; col++) {
+        long pattern = 0b1L | (0b1L << 11) | (0b1L << 22) | (0b1L << 33);
+        pattern <<= (row * 10 + col);
         patterns.add(pattern);
       }
     }
 
     // Diagonal \
-    for (int row = 0; row < 3; row++) {
-      for (int col = 3; col < 7; col++) {
-        long pattern = 0b1L | (0b1L << 5) | (0b1L << 10) | (0b1L << 15);
-        pattern <<= (row + col * 6 - 15);
+    for (int row = 3; row < height; row++) {
+      for (int col = 0; col <= width - 4; col++) {
+        long pattern = 0b1L | (0b1L << 9) | (0b1L << 18) | (0b1L << 27); // Diagonal spacing
+        pattern <<= ((row * width) + col - 27); // Correct the shift
         patterns.add(pattern);
       }
     }
@@ -225,7 +229,9 @@ public class SerenaFourliams extends Player {
   }
 
   private boolean hasWon(long board) {
-    long[] patterns = generateWinningPatterns();
+    int width = 10;
+    int height = 8;
+    long[] patterns = generateWinningPatterns(width, height);
     for (long pattern : patterns) {
       if ((board & pattern) == pattern) {
         return true; // Found a winning line
