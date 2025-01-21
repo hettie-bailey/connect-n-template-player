@@ -66,7 +66,7 @@ public class SerenaFourliams extends Player {
   }
 
   public int makeMove(Board board, long playerBoard, long opponentBoard) {
-    int bestMove = -1;
+    int bestMove = 0;
     int bestValue = Integer.MIN_VALUE;
     int alpha = Integer.MIN_VALUE;
     int beta = Integer.MAX_VALUE;
@@ -241,8 +241,8 @@ public class SerenaFourliams extends Player {
     // Diagonal /
     for (int row = 0; row <= height - 4; row++) {
       for (int col = 0; col <= width - 4; col++) {
-        long pattern = 0b1L | (0b1L << 11) | (0b1L << 22) | (0b1L << 33);
-        pattern <<= (row * 10 + col);
+        long pattern = 0b1L | (0b1L << 9) | (0b1L << 18) | (0b1L << 27);
+        pattern <<= (row + col*height);
         patterns.add(pattern);
       }
     }
@@ -250,8 +250,8 @@ public class SerenaFourliams extends Player {
     // Diagonal \
     for (int row = 3; row < height; row++) {
       for (int col = 0; col <= width - 4; col++) {
-        long pattern = 0b1L | (0b1L << 9) | (0b1L << 18) | (0b1L << 27); // Diagonal spacing
-        pattern <<= ((row * width) + col );
+        long pattern = 0b1L | (0b1L << 7) | (0b1L << 14) | (0b1L << 21); // Diagonal spacing
+        pattern <<= (row + col*height );
         patterns.add(pattern);
       }
     }
