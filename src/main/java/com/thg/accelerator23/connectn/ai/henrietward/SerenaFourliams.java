@@ -137,10 +137,14 @@ public class SerenaFourliams extends Player {
   }
 
   private boolean isColumnPlayable(long playerBoard, long opponentBoard, int col) {
-    long columnMask = getColumnMask(col);
-    // Check if the topmost cell of the column is empty
-    return (playerBoard & columnMask) == 0 && (opponentBoard & columnMask) == 0;
+    int height = 8;
+    long columnMask = getColumnMask(col); // Full column mask
+    long topmostCellMask = 1L << (col * height); // Mask for the topmost cell in the column
+
+    // Check if the topmost cell in the column is empty (both player and opponent should not occupy it)
+    return (playerBoard & topmostCellMask) == 0 && (opponentBoard & topmostCellMask) == 0;
   }
+
 
   private long applyMove(long board, int col) {
     long columnMask = getColumnMask(col);
@@ -205,7 +209,7 @@ public class SerenaFourliams extends Player {
   private int centralControl(long board) {
     int centerColumn = 5; // Assuming 0-based index
     long centerMask = 0b0001000L << (centerColumn * 10); // Center column mask
-    return Long.bitCount(board & centerMask) * 50; // +50 for each piece in the center
+    return Long.bitCount(board & centerMask) * 20; // +20 for each piece in the center
   }
 
   // Generate all winning patterns (4 in a row horizontally, vertically, diagonally)
