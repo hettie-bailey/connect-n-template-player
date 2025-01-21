@@ -20,8 +20,28 @@ public class SerenaFourliams extends Player {
     long playerBoard = convertToBitboard(board, this.getCounter());
     long opponentBoard = convertToBitboard(board, this.getCounter().getOther());
 
+    int blockingMove = findBlockingMove(playerBoard, opponentBoard);
+    if (blockingMove != -1) {
+      return blockingMove;
+    }
+
     // Delegate to the bitboard-based makeMove method
     return makeMove(board, playerBoard, opponentBoard);
+  }
+
+  private int findBlockingMove(long playerBoard, long opponentBoard) {
+    for (int col = 0; col < 10; col++) {
+      if (isColumnPlayable(playerBoard, opponentBoard, col)) {
+        // Simulate the opponent making a move in this column
+        long newOpponentBoard = applyMove(opponentBoard, col);
+
+        // Check if this move results in a win for the opponent
+        if (hasWon(newOpponentBoard)) {
+          return col; // Block this column
+        }
+      }
+    }
+    return -1; // No immediate threat found
   }
 
   public int makeMove(Board board, long playerBoard, long opponentBoard) {
@@ -170,7 +190,7 @@ public class SerenaFourliams extends Player {
   private int centralControl(long board) {
     int centerColumn = 5; // Assuming 0-based index
     long centerMask = 0b0001000L << (centerColumn * 10); // Center column mask
-    return Long.bitCount(board & centerMask) * 3; // +3 for each piece in the center
+    return Long.bitCount(board & centerMask) * 5; // +5 for each piece in the center
   }
 
   // Generate all winning patterns (4 in a row horizontally, vertically, diagonally)
