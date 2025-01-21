@@ -1,5 +1,5 @@
 package com.thg.accelerator23.connectn.ai.henrietward;
-
+import java.math.BigInteger;
 import com.thehutgroup.accelerator.connectn.player.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -29,8 +29,8 @@ public class SerenaFourliams extends Player {
     return makeMove(board, playerBoard, opponentBoard);
   }
 
-  private long convertToBitboard(Board board, Counter counter) {
-    long bitboard = 0L;
+  private BigInteger convertToBitboard(Board board, Counter counter) {
+    BigInteger bitboard = BigInteger.ZERO;
     int width = board.getConfig().getWidth();  // 10
     int height = board.getConfig().getHeight(); // 8
 
@@ -39,7 +39,7 @@ public class SerenaFourliams extends Player {
         Position position = new Position(col, row);
         Counter currentCounter = board.getCounterAtPosition(position);
         if (currentCounter == counter) {
-          bitboard |= 1L << (col * 8 + row); // Shift by 8 rows per column
+          bitboard = bitboard.setBit(col * height + row); // Use BigInteger's setBit method
         }
       }
     }
