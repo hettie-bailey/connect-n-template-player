@@ -3,16 +3,15 @@ package com.thg.accelerator23.connectn.ai.henrietward;
 import com.thehutgroup.accelerator.connectn.player.Board;
 import com.thehutgroup.accelerator.connectn.player.Counter;
 import com.thehutgroup.accelerator.connectn.player.Player;
-import com.thehutgroup.accelerator.connectn.player.Position;
 import com.thehutgroup.accelerator.connectn.player.InvalidMoveException;
 
 
-public class NameAi extends Player {
+public class SerenaFourliams extends Player {
   private int maxDepth;
 
-  public NameAi(Counter counter, String name, int maxDepth ) {
+  public SerenaFourliams(Counter counter, String name, int maxDepth ) {
     //TODO: fill in your name here
-    super(counter, NameAi.class.getName());
+    super(counter, SerenaFourliams.class.getName());
     this.maxDepth = maxDepth;
   }
 
