@@ -115,6 +115,10 @@ public class SerenaFourliams extends Player {
   }
 
   private boolean isColumnPlayable(BigInteger playerBoard, BigInteger opponentBoard, int col) {
+    if (col < 0 || col >= board.getConfig().getWidth()) {
+      return false;
+    }
+
     BigInteger topmostCellMask = BigInteger.ONE.shiftLeft(col * 8 + 7);
     return playerBoard.and(topmostCellMask).equals(BigInteger.ZERO) &&
             opponentBoard.and(topmostCellMask).equals(BigInteger.ZERO);
@@ -251,7 +255,7 @@ public class SerenaFourliams extends Player {
   private boolean isBoardFull(BigInteger playerBoard, BigInteger opponentBoard) {
     // Check if all positions are occupied
     BigInteger allPositions = playerBoard.or(opponentBoard);
-    BigInteger fullBoard = BigInteger.valueOf(0b1111111111111111111111111111111111111111111111111L);
+    BigInteger fullBoard = BigInteger.ONE.shiftLeft(80).subtract(BigInteger.ONE);
     return allPositions.equals(fullBoard);
   }
 
