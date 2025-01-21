@@ -29,6 +29,23 @@ public class SerenaFourliams extends Player {
     return makeMove(board, playerBoard, opponentBoard);
   }
 
+  private long convertToBitboard(Board board, Counter counter) {
+    long bitboard = 0L;
+    int width = board.getConfig().getWidth();  // 10
+    int height = board.getConfig().getHeight(); // 8
+
+    for (int col = 0; col < width; col++) {
+      for (int row = 0; row < height; row++) {
+        Position position = new Position(col, row);
+        Counter currentCounter = board.getCounterAtPosition(position);
+        if (currentCounter == counter) {
+          bitboard |= 1L << (col * 8 + row); // Shift by 8 rows per column
+        }
+      }
+    }
+    return bitboard;
+  }
+
   private int findBlockingMove(long playerBoard, long opponentBoard) {
     for (int col = 0; col < 10; col++) {
       if (isColumnPlayable(playerBoard, opponentBoard, col)) {
@@ -50,7 +67,9 @@ public class SerenaFourliams extends Player {
     int alpha = Integer.MIN_VALUE;
     int beta = Integer.MAX_VALUE;
 
-    for (int col = 0; col < board.getConfig().getWidth() ; col++) {
+    int[] columnOrder = {4, 3, 5, 2, 6, 1, 7, 0, 8, 9};
+
+    for (int col : columnOrder) {
       if (isColumnPlayable(playerBoard, opponentBoard, col)) {
         long newPlayerBoard = applyMove(playerBoard, col);
 
@@ -71,22 +90,7 @@ public class SerenaFourliams extends Player {
     return bestMove;
   }
 
-  private long convertToBitboard(Board board, Counter counter) {
-    long bitboard = 0L;
-    int width = board.getConfig().getWidth();  // 10
-    int height = board.getConfig().getHeight(); // 8
 
-    for (int col = 0; col < width; col++) {
-      for (int row = 0; row < height; row++) {
-        Position position = new Position(col, row);
-        Counter currentCounter = board.getCounterAtPosition(position);
-        if (currentCounter == counter) {
-          bitboard |= 1L << (col * 8 + row); // Shift by 8 rows per column
-        }
-      }
-    }
-    return bitboard;
-  }
 
 
   private int minimax(long playerBoard, long opponentBoard, int depth, int alpha, int beta, boolean isMaximizingPlayer) {
@@ -169,6 +173,8 @@ public class SerenaFourliams extends Player {
     int width = 10;
     int height = 8;
 
+    System.out.println("Evaluating board: " + Long.toBinaryString(board));
+
     // Winning patterns for Connect 4 (all possible 4-in-a-row patterns)
     long[] patterns = generateWinningPatterns(width, height);
 
@@ -187,6 +193,7 @@ public class SerenaFourliams extends Player {
       }
     }
 
+    System.out.println("Score for position: " + score);
     return score;
   }
 
