@@ -24,6 +24,8 @@ public class SerenaFourliams extends Player {
       return blockingMove;
     }
 
+    System.out.println("Blocking move: " + blockingMove);
+
     return makeMoveWithMinimax(playerBoard, opponentBoard);
   }
 
@@ -57,7 +59,7 @@ public class SerenaFourliams extends Player {
   }
 
   private int makeMoveWithMinimax(BigInteger playerBoard, BigInteger opponentBoard) {
-    int bestMove = -1;
+    int bestMove = 0;
     int bestValue = Integer.MIN_VALUE;
     int alpha = Integer.MIN_VALUE;
     int beta = Integer.MAX_VALUE;
@@ -80,6 +82,7 @@ public class SerenaFourliams extends Player {
         }
       }
     }
+    System.out.println("Best move: " + bestMove);
     return bestMove;
   }
 
@@ -123,6 +126,7 @@ public class SerenaFourliams extends Player {
     BigInteger topmostCellMask = BigInteger.ONE.shiftLeft(col * 8 + 7);
     return playerBoard.and(topmostCellMask).equals(BigInteger.ZERO) &&
             opponentBoard.and(topmostCellMask).equals(BigInteger.ZERO);
+
   }
 
   private BigInteger applyMove(BigInteger board, int col) {
@@ -172,6 +176,7 @@ public class SerenaFourliams extends Player {
       }
     }
 
+    System.out.println("Score: " + score);
     return score;
   }
 
@@ -261,10 +266,10 @@ public class SerenaFourliams extends Player {
   }
 
   private boolean hasWon(BigInteger board) {
-    BigInteger horizontal = board.and(board.shiftRight(1)).and(board.shiftRight(2)).and(board.shiftRight(3));
-    BigInteger vertical = board.and(board.shiftRight(7)).and(board.shiftRight(14)).and(board.shiftRight(21));
-    BigInteger diagonal1 = board.and(board.shiftRight(6)).and(board.shiftRight(12)).and(board.shiftRight(18));
-    BigInteger diagonal2 = board.and(board.shiftRight(8)).and(board.shiftRight(16)).and(board.shiftRight(24));
+    BigInteger horizontal = board.and(board.shiftRight(8)).and(board.shiftRight(16)).and(board.shiftRight(24));
+    BigInteger vertical = board.and(board.shiftRight(1)).and(board.shiftRight(2)).and(board.shiftRight(3));
+    BigInteger diagonal1 = board.and(board.shiftRight(9)).and(board.shiftRight(18)).and(board.shiftRight(27));
+    BigInteger diagonal2 = board.and(board.shiftRight(7)).and(board.shiftRight(14)).and(board.shiftRight(21));
 
     return !horizontal.equals(BigInteger.ZERO) ||
             !vertical.equals(BigInteger.ZERO) ||
