@@ -115,7 +115,8 @@ public class SerenaFourliams extends Player {
   }
 
   private boolean isColumnPlayable(BigInteger playerBoard, BigInteger opponentBoard, int col) {
-    if (col < 0 || col >= board.getConfig().getWidth()) {
+    int width = 10;
+    if (col < 0 || col >= 10) {
       return false;
     }
 
