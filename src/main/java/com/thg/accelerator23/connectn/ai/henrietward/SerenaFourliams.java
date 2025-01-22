@@ -1,8 +1,9 @@
 package com.thg.accelerator23.connectn.ai.henrietward;
-import java.math.BigInteger;
-import com.thehutgroup.accelerator.connectn.player.*;
-import java.util.List;
-import java.util.ArrayList;
+
+import com.thehutgroup.accelerator.connectn.player.Board;
+import com.thehutgroup.accelerator.connectn.player.Counter;
+import com.thehutgroup.accelerator.connectn.player.Player;
+import com.thehutgroup.accelerator.connectn.player.InvalidMoveException;
 
 
 public class SerenaFourliams extends Player {
@@ -16,269 +17,317 @@ public class SerenaFourliams extends Player {
 
   @Override
   public int makeMove(Board board) {
-    BigInteger playerBoard = convertToBitboard(board, this.getCounter());
-    BigInteger opponentBoard = convertToBitboard(board, this.getCounter().getOther());
+    int bestMove = -1;
+    int bestValue = Integer.MIN_VALUE;
+    Counter counter = this.getCounter();
+    int alpha = Integer.MIN_VALUE;
+    int beta = Integer.MAX_VALUE;
+    int blockingCol = blockingMove(board);
 
-    int blockingMove = findBlockingMove(playerBoard, opponentBoard);
-    if (blockingMove != -1) {
-      return blockingMove;
+    if (blockingCol != -1) {
+      return blockingCol;
     }
 
-    System.out.println("Blocking move: " + blockingMove);
-
-    return makeMoveWithMinimax(playerBoard, opponentBoard);
-  }
-
-  private BigInteger convertToBitboard(Board board, Counter counter) {
-    BigInteger bitboard = BigInteger.ZERO;
-    int width = board.getConfig().getWidth();
-    int height = board.getConfig().getHeight();
-
-    for (int col = 0; col < width; col++) {
-      for (int row = 0; row < height; row++) {
-        Position position = new Position(col, row);
-        Counter currentCounter = board.getCounterAtPosition(position);
-        if (currentCounter == counter) {
-          bitboard = bitboard.setBit(col * height + (height - 1 - row));
+    for (int col = 0; col < board.getConfig().getWidth(); col++) {
+      if (isColumnPlayable(board, col)) {
+        try {
+          Board newBoard = new Board(board, col, counter);
+          int moveValue = minimax(newBoard, maxDepth - 1, alpha, beta, false, counter.getOther());
+          if (moveValue > bestValue) {
+            bestValue = moveValue;
+            bestMove = col;
+          }
+          alpha = Math.max(alpha, bestValue);
+          if (beta <= alpha) {
+            break; // Beta cut-off
+          }
+        } catch (InvalidMoveException e) {
+          // This should not occur since we checked isColumnPlayable
+          e.printStackTrace();
         }
       }
     }
-    return bitboard;
+
+    return bestMove;
   }
 
-  private int findBlockingMove(BigInteger playerBoard, BigInteger opponentBoard) {
+  private int blockingMove(Board board) {
+    Counter opponent = this.getCounter().getOther();
+    Counter[][] placements = board.getCounterPlacements();
+
+    for (int row = 0; row < 8; row++) {
+      for (int col = 0; col <= 6; col++) {
+        Counter[] window = {
+                placements[col][row],
+                placements[col+1][row],
+                placements[col+2][row],
+                placements[col+3][row]
+        };
+        if (isThreeInARow(window, opponent)) {
+          return findBlockingColumn(board, col, row, "horizontal", placements);
+        }
+      }
+    }
+
     for (int col = 0; col < 10; col++) {
-      if (isColumnPlayable(playerBoard, opponentBoard, col)) {
-        BigInteger newOpponentBoard = applyMove(opponentBoard, col);
-        if (hasWon(newOpponentBoard)) {
-          return col;
+      for (int row = 0; row <= 4; row++) {
+        Counter[] window = {
+                placements[col][row],
+                placements[col][row+1],
+                placements[col][row+2],
+                placements[col][row+3]
+        };
+        if (isThreeInARow(window, opponent)) {
+          return findBlockingColumn(board, col, row, "vertical", placements);
+        }
+      }
+    }
+
+    for (int row = 0; row <= 4 ; row++) {
+      for (int col = 0; col <= 6; col++) {
+        Counter[] window = {
+                placements[col][row],
+                placements[col + 1][row + 1],
+                placements[col + 2][row + 2],
+                placements[col + 3][row + 3],
+        };
+
+        if (isThreeInARow(window, opponent)) {
+          return findBlockingColumn(board, col, row, "diagonal", placements);
+        }
+      }
+    }
+
+    for (int row = 3; row < 8; row++) {
+      for (int col = 0; col <= 6; col++) {
+        Counter[] window = {
+                placements[col][row],
+                placements[col + 1][row - 1],
+                placements[col + 2][row - 2],
+                placements[col + 3][row - 3],
+        };
+
+        if (isThreeInARow(window, opponent)) {
+          return findBlockingColumn(board, col, row, "diagonal", placements);
         }
       }
     }
     return -1;
   }
 
-  private int makeMoveWithMinimax(BigInteger playerBoard, BigInteger opponentBoard) {
-    int bestMove = 0;
-    int bestValue = Integer.MIN_VALUE;
-    int alpha = Integer.MIN_VALUE;
-    int beta = Integer.MAX_VALUE;
-
-    int[] columnOrder = {4, 3, 5, 2, 6, 1, 7, 0, 8, 9};
-
-    for (int col : columnOrder) {
-      if (isColumnPlayable(playerBoard, opponentBoard, col)) {
-        BigInteger newPlayerBoard = applyMove(playerBoard, col);
-        int moveValue = minimax(newPlayerBoard, opponentBoard, maxDepth - 1, alpha, beta, false);
-
-        if (moveValue > bestValue) {
-          bestValue = moveValue;
-          bestMove = col;
-        }
-
-        alpha = Math.max(alpha, bestValue);
-        if (beta <= alpha) {
-          break; // Prune
-        }
-      }
+  private boolean isThreeInARow(Counter[] window, Counter opponent) {
+    int count = 0;
+    int empty = 0;
+    for (Counter c : window) {
+      if (c == opponent) count++;
+      if (c == null) empty++;
     }
-    System.out.println("Best move: " + bestMove);
-    return bestMove;
+    return count == 3 && empty == 1;
   }
 
-  private int minimax(BigInteger playerBoard, BigInteger opponentBoard, int depth, int alpha, int beta, boolean isMaximizing) {
-    if (depth == 0 || hasWon(playerBoard) || hasWon(opponentBoard)) {
-      return evaluateBoard(playerBoard, opponentBoard);
+  private int findBlockingColumn(Board board, int startCol, int startRow, String direction, Counter[][] placements) {
+    // Find the empty position that needs blocking
+    // Return the column number if it's a valid move
+    switch(direction) {
+      case "horizontal":
+        for (int i = 0; i < 4; i++) {
+          if (placements[startCol + i][startRow] == null) {
+            if (isValidMove(board,startCol + i)) {
+              return startCol + i;
+            }
+          }
+        }
+        break;
+      case "vertical":
+        if (placements[startCol][startRow + 3] == null) {
+          if (isValidMove(board, startCol)) {
+            return startCol;
+          }
+        }
+        break;
+      case "diagonal":
+        for (int i = 0; i < 4; i++) {
+          if (placements[startCol + i][startRow+i] == null) {
+            if (isValidMove(board,startCol + i)) {
+              return startCol + i;
+            }
+          }
+        }
+        break;
+      case "neg_diagonal":
+        for (int i = 0; i < 4; i++) {
+          if (placements[startCol + i][startRow-i] == null) {
+            if (isValidMove(board,startCol + i)) {
+              return startCol + i;
+            }
+          }
+        }
+        break;
+    }
+    return -1;
+  }
+
+  private boolean isValidMove(Board board, int col) {
+    // Check if the column is within bounds and not full
+    return col >= 0 && col < board.getConfig().getWidth() &&
+            isColumnPlayable(board, col);
+  }
+
+
+
+  private int minimax(Board board, int depth, int alpha, int beta, boolean isMaximizingPlayer, Counter counter) {
+
+    if (depth == 0 || isGameOver(board)) {
+      return evaluateBoard(board, counter);
     }
 
-    int bestValue = isMaximizing ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+    int bestValue = isMaximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
-    for (int col = 0; col < 10; col++) {
-      if (isColumnPlayable(playerBoard, opponentBoard, col)) {
-        BigInteger newPlayerBoard = isMaximizing ? applyMove(playerBoard, col) : playerBoard;
-        BigInteger newOpponentBoard = isMaximizing ? opponentBoard : applyMove(opponentBoard, col);
+    for (int col = 0; col < board.getConfig().getWidth(); col++) {
+      if (isColumnPlayable(board, col)) {
+        try {
+          Board newBoard = new Board(board, col, counter);
+          int value = minimax(newBoard, depth - 1, alpha, beta, !isMaximizingPlayer, counter.getOther());
 
-        int value = minimax(newPlayerBoard, newOpponentBoard, depth - 1, alpha, beta, !isMaximizing);
+          if (isMaximizingPlayer) {
+            bestValue = Math.max(bestValue, value);
+            alpha = Math.max(alpha, value);
+          } else {
+            bestValue = Math.min(bestValue, value);
+            beta = Math.min(beta, value);
+          }
 
-        if (isMaximizing) {
-          bestValue = Math.max(bestValue, value);
-          alpha = Math.max(alpha, value);
-        } else {
-          bestValue = Math.min(bestValue, value);
-          beta = Math.min(beta, value);
-        }
-
-        if (beta <= alpha) {
-          break; // Prune
+          if (beta <= alpha) {
+            break; // Alpha-Beta Pruning
+          }
+        } catch (InvalidMoveException e) {
+          // Shouldn't happen
+          e.printStackTrace();
         }
       }
     }
-
     return bestValue;
   }
 
-  private boolean isColumnPlayable(BigInteger playerBoard, BigInteger opponentBoard, int col) {
-    int width = 10;
-    if (col < 0 || col >= 10) {
-      return false;
-    }
-
-    BigInteger topmostCellMask = BigInteger.ONE.shiftLeft(col * 8 + 7);
-    return playerBoard.and(topmostCellMask).equals(BigInteger.ZERO) &&
-            opponentBoard.and(topmostCellMask).equals(BigInteger.ZERO);
-
+  private boolean isColumnPlayable(Board board, int col) {
+    // Check if the top cell of the column is vacant
+    return board.getCounterPlacements()[col][board.getConfig().getHeight() - 1] == null;
   }
 
-  private BigInteger applyMove(BigInteger board, int col) {
-    BigInteger columnMask = getColumnMask(col);
-    BigInteger lowestEmptyRow = columnMask.andNot(board);
-    BigInteger movePosition = lowestEmptyRow.and(lowestEmptyRow.negate());
-    return board.or(movePosition);
-  }
 
-  private BigInteger getColumnMask(int col) {
-    int height = 8;
-    return BigInteger.ONE.shiftLeft(height).subtract(BigInteger.ONE).shiftLeft(col * height);
-  }
+  private int evaluateBoard(Board board, Counter counter) {
+    // Implement evaluation logic to score the board for the given counter
 
-  private int evaluateBoard(BigInteger playerBoard, BigInteger opponentBoard) {
     int score = 0;
 
-    // Central control: prioritize central columns
-    score += centralControl(playerBoard);
+    Counter[][] placements = board.getCounterPlacements();
 
-    // Evaluate player and opponent positions
-    score += evaluatePosition(playerBoard);
-    score -= evaluatePosition(opponentBoard); // Opponent's positions lower the score
+    score += evaluateRows(placements, counter);
+    score += evaluateColumns(placements, counter);
+    score += evaluateDiagonals(placements, counter);
 
     return score;
   }
 
-  private int evaluatePosition(BigInteger board) {
+  private int evaluateRows(Counter[][] placements, Counter counter) {
     int score = 0;
 
-    List<BigInteger> winningPatterns = generateWinningPatterns(10, 8); // assuming 10x8 board size
-    for (BigInteger pattern : winningPatterns) {
-      BigInteger matchingPieces = board.and(pattern); // intersection of board and the winning pattern
+    for (int row = 0; row < 8; row++) {
+      for (int col = 0; col <= 6 ; col++)
+      {Counter[] window = {
+              placements[col][row],
+              placements[col+1][row],
+              placements[col+2][row],
+              placements[col+3][row],
+      };
 
-      int count = matchingPieces.bitCount();  // Count how many bits are set
-      // A 4-in-a-row is a winning condition
-      if (count == 4) {
-        score += 100000;  // A winning move is worth a very high score
-      }
-      // A 3-in-a-row with an empty spot (open 3)
-      else if (count == 3 && (matchingPieces.and(pattern.not())).signum() > 0) {
-        score += 1000;   // Reward open 3-in-a-row patterns
-      }
-      // A 2-in-a-row with an empty spot (open 2)
-      else if (count == 2 && (matchingPieces.and(pattern.not())).signum() > 0) {
-        score += 100;    // Reward open 2-in-a-row patterns
+        score += evaluateWindow(window, counter);
       }
     }
-
-    System.out.println("Score: " + score);
     return score;
   }
 
-  // Central column control adds a bonus
-  private int centralControl(BigInteger board) {
+  private int evaluateColumns(Counter[][] placements, Counter counter) {
     int score = 0;
-    int width = 10; // Number of columns
-    int height = 8; // Number of rows
 
-    // Central columns in a 10x8 grid are columns 4 and 5
-    for (int row = 0; row < height; row++) {
-      BigInteger rowMask = BigInteger.ZERO;
+    for (int col = 0; col < 10; col++) {
+      for (int row = 0; row <= 4 ; row++)
+      {Counter[] window = {
+              placements[col][row],
+              placements[col][row+1],
+              placements[col][row+2],
+              placements[col][row+3],
+      };
 
-      // Set bits for columns 4 and 5 in the current row
-      rowMask = rowMask.setBit(row * width + 4);  // Column 4
-      rowMask = rowMask.setBit(row * width + 5);  // Column 5
-
-      // Count how many bits are set in the intersection of rowMask and board (central control)
-      score += Long.bitCount(board.and(rowMask).longValue()); // Use Long.bitCount on the intersection
+        score += evaluateWindow(window, counter);
+      }
     }
-
-    return score * 20;  // Arbitrary value to scale the score for central control
+    return score;
   }
 
-  // Generate all winning patterns (4 in a row horizontally, vertically, diagonally)
-  private List<BigInteger> generateWinningPatterns(int width, int height) {
-    List<BigInteger> patterns = new ArrayList<>();
+  private int evaluateDiagonals(Counter[][] placements, Counter counter) {
+    int score = 0;
 
-    // Horizontal patterns
-    for (int row = 0; row < height; row++) {
-      for (int col = 0; col <= width - 4; col++) {
-        BigInteger pattern = BigInteger.ZERO;
-        for (int offset = 0; offset < 4; offset++) {
-          pattern = pattern.setBit(row * width + col + offset);
-        }
-        patterns.add(pattern);
+    for (int row = 0; row <= 4 ; row++) {
+      for (int col = 0; col <= 6 ; col++)
+      {Counter[] window = {
+              placements[col][row],
+              placements[col+1][row+1],
+              placements[col+2][row+2],
+              placements[col+3][row+3],
+      };
+
+        score += evaluateWindow(window, counter);
+      }
+    }
+    return score;
+  }
+
+  private int evaluateNegDiagonals(Counter[][] placements, Counter counter) {
+    int score = 0;
+
+    for (int row = 3; row < 8; row++) {
+      for (int col = 0; col <= 6; col++) {
+        Counter[] window = {
+                placements[col][row],
+                placements[col + 1][row - 1],
+                placements[col + 2][row - 2],
+                placements[col + 3][row - 3],
+        };
+        score += evaluateWindow(window, counter);
       }
     }
 
-    // Vertical patterns
-    for (int col = 0; col < width; col++) {
-      for (int row = 0; row <= height - 4; row++) {
-        BigInteger pattern = BigInteger.ZERO;
-        for (int offset = 0; offset < 4; offset++) {
-          pattern = pattern.setBit((row + offset) * width + col);
-        }
-        patterns.add(pattern);
-      }
+    return score;
+  }
+
+  private int evaluateWindow(Counter [] window, Counter counter) {
+    int score = 0;
+    int countSelf = 0;
+    int countOpponent = 0;
+
+    for (Counter c : window) {
+      if (c == counter) countSelf++;
+      else if (c == counter.getOther()) countOpponent++;
     }
 
-    // Diagonal patterns (bottom-left to top-right)
-    for (int row = 0; row <= height - 4; row++) {
-      for (int col = 0; col <= width - 4; col++) {
-        BigInteger pattern = BigInteger.ZERO;
-        for (int offset = 0; offset < 4; offset++) {
-          pattern = pattern.setBit((row + offset) * width + col + offset);
-        }
-        patterns.add(pattern);
-      }
-    }
+    if (countSelf == 4) score += 100;
+    else if (countSelf == 3 && countOpponent == 0) score += 50;
+    else if (countSelf == 2 && countOpponent == 0) score += 10;
+    else if (countOpponent == 3 && countSelf == 0) score -= 70;
+    else if (countOpponent == 4) score -= 100;
 
-    // Diagonal patterns (top-left to bottom-right)
-    for (int row = 0; row <= height - 4; row++) {
-      for (int col = 3; col < width; col++) {
-        BigInteger pattern = BigInteger.ZERO;
-        for (int offset = 0; offset < 4; offset++) {
-          pattern = pattern.setBit((row + offset) * width + col - offset);
-        }
-        patterns.add(pattern);
-      }
-    }
-
-    return patterns;
+    return score;
   }
 
 
-  private boolean isGameOver(BigInteger playerBoard, BigInteger opponentBoard) {
-    // Check if either player has won or the board is full
-    return hasWon(playerBoard) || hasWon(opponentBoard) || isBoardFull(playerBoard, opponentBoard);
-  }
 
-  private boolean isBoardFull(BigInteger playerBoard, BigInteger opponentBoard) {
-    // Check if all positions are occupied
-    BigInteger allPositions = playerBoard.or(opponentBoard);
-    BigInteger fullBoard = BigInteger.ONE.shiftLeft(80).subtract(BigInteger.ONE);
-    return allPositions.equals(fullBoard);
-  }
-
-  private boolean hasWon(BigInteger board) {
-    BigInteger horizontal = board.and(board.shiftRight(8)).and(board.shiftRight(16)).and(board.shiftRight(24));
-    BigInteger vertical = board.and(board.shiftRight(1)).and(board.shiftRight(2)).and(board.shiftRight(3));
-    BigInteger diagonal1 = board.and(board.shiftRight(9)).and(board.shiftRight(18)).and(board.shiftRight(27));
-    BigInteger diagonal2 = board.and(board.shiftRight(7)).and(board.shiftRight(14)).and(board.shiftRight(21));
-
-    return !horizontal.equals(BigInteger.ZERO) ||
-            !vertical.equals(BigInteger.ZERO) ||
-            !diagonal1.equals(BigInteger.ZERO) ||
-            !diagonal2.equals(BigInteger.ZERO);
+  private boolean isGameOver(Board board) {
+    // Implement logic to check if the game is over (win/loss/draw)
+    return false; // Placeholder
   }
 
 }
-
 
 
 
