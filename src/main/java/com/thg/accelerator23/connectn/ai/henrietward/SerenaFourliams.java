@@ -48,28 +48,31 @@ public class SerenaFourliams extends Player {
       return blockingCol;
     }
 
-    for (int col = 0; col < board.getConfig().getWidth(); col++) {
-      long currentTime = System.currentTimeMillis();
-      if (currentTime - startTime >= 9000) {
-        break;
-      }
-      if (isColumnPlayable(board, col)) {
-        try {
-          Board newBoard = new Board(board, col, counter);
-          int moveValue = minimax(newBoard, maxDepth - 1, alpha, beta, false, counter.getOther());
-          if (moveValue > bestValue) {
-            bestValue = moveValue;
-            bestMove = col;
+    while (System.currentTimeMillis() - startTime < 8500) {
+
+      for (int col = 0; col < board.getConfig().getWidth(); col++) {
+        long currentTime = System.currentTimeMillis();
+
+        if (isColumnPlayable(board, col)) {
+          try {
+            Board newBoard = new Board(board, col, counter);
+            int moveValue = minimax(newBoard, maxDepth - 1, alpha, beta, false, counter.getOther());
+            if (moveValue > bestValue) {
+              bestValue = moveValue;
+              bestMove = col;
+            }
+            alpha = Math.max(alpha, bestValue);
+            if (beta <= alpha) {
+              break; // Beta cut-off
+            }
+          } catch (InvalidMoveException e) {
+            // This should not occur since we checked isColumnPlayable
+            e.printStackTrace();
           }
-          alpha = Math.max(alpha, bestValue);
-          if (beta <= alpha) {
-            break; // Beta cut-off
-          }
-        } catch (InvalidMoveException e) {
-          // This should not occur since we checked isColumnPlayable
-          e.printStackTrace();
         }
       }
+      if (System.currentTimeMillis() - startTime < 8500) break;
+
     }
 
     return bestMove;
