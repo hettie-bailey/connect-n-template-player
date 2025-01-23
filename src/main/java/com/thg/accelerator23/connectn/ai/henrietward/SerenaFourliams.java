@@ -1,5 +1,7 @@
 package com.thg.accelerator23.connectn.ai.henrietward;
 
+import java.util.List;
+import java.util.Random;
 import com.thehutgroup.accelerator.connectn.player.Board;
 import com.thehutgroup.accelerator.connectn.player.Counter;
 import com.thehutgroup.accelerator.connectn.player.Player;
@@ -17,6 +19,24 @@ public class SerenaFourliams extends Player {
 
   @Override
   public int makeMove(Board board) {
+    long startTime = System.currentTimeMillis();
+    List<String> messages = List.of(
+            "You might be the worst player I've ever seen",
+            "This is embarrassing.... ",
+            "If I were you, I'd end it all",
+            "That move was genuinely dreadful",
+            "Engaging Supercharged Engineering Powers",
+            "Even when I'm not in the office, I'm in it",
+            "Have I won yet?",
+            "If I win, its because of Ed; if I lose, its because of Hettie",
+            "Your name is not as good as mine",
+            "Were these print statements worth the lost time? Absolutely."
+    );
+
+    Random random = new Random();
+    String randomMessage = messages.get(random.nextInt(messages.size()));
+
+    System.out.println("SerenaFourliams: " + randomMessage);
     int bestMove = -1;
     int bestValue = Integer.MIN_VALUE;
     Counter counter = this.getCounter();
@@ -29,6 +49,10 @@ public class SerenaFourliams extends Player {
     }
 
     for (int col = 0; col < board.getConfig().getWidth(); col++) {
+      long currentTime = System.currentTimeMillis();
+      if (currentTime - startTime >= 9000) {
+        break;
+      }
       if (isColumnPlayable(board, col)) {
         try {
           Board newBoard = new Board(board, col, counter);
@@ -225,6 +249,7 @@ public class SerenaFourliams extends Player {
     score += evaluateRows(placements, counter);
     score += evaluateColumns(placements, counter);
     score += evaluateDiagonals(placements, counter);
+    score += evaluateNegDiagonals(placements, counter);
 
     return score;
   }
@@ -328,13 +353,3 @@ public class SerenaFourliams extends Player {
   }
 
 }
-
-
-
-
-
-
-
-
-
-
