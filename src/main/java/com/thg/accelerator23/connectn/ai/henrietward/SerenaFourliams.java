@@ -10,6 +10,7 @@ import com.thehutgroup.accelerator.connectn.player.InvalidMoveException;
 
 public class SerenaFourliams extends Player {
   private int maxDepth;
+  private boolean isFirstMove = true;
 
   public SerenaFourliams(Counter counter, String name, int maxDepth ) {
     //TODO: fill in your name here
@@ -44,6 +45,13 @@ public class SerenaFourliams extends Player {
     int beta = Integer.MAX_VALUE;
     int blockingCol = blockingMove(board);
 
+
+    if (isFirstMove) {
+      isFirstMove = false;
+      return 4;
+    }
+
+
     if (blockingCol != -1) {
       return blockingCol;
     }
@@ -77,6 +85,7 @@ public class SerenaFourliams extends Player {
 
     return bestMove;
   }
+
 
   private int blockingMove(Board board) {
     Counter opponent = this.getCounter().getOther();
@@ -249,10 +258,17 @@ public class SerenaFourliams extends Player {
 
     Counter[][] placements = board.getCounterPlacements();
 
+    for (int col = 0; col < board.getConfig().getWidth(); col++) {
+      int centerScore = board.getConfig().getWidth() / 2;
+      score += placements[col].length * (centerScore - Math.abs(centerScore - col));
+    }
+
     score += evaluateRows(placements, counter);
     score += evaluateColumns(placements, counter);
     score += evaluateDiagonals(placements, counter);
     score += evaluateNegDiagonals(placements, counter);
+
+    System.out.println("Score: " + score);
 
     return score;
   }
