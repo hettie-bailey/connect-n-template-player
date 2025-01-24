@@ -6,12 +6,12 @@ import java.util.Random;
 import com.thehutgroup.accelerator.connectn.player.*;
 
 
-public class TheGridReaper extends Player {
+public class FiverIfYouVoteThisName extends Player {
   private boolean isFirstMove = true;
 
-  public TheGridReaper(Counter counter, String name) {
+  public FiverIfYouVoteThisName(Counter counter, String name) {
     //TODO: fill in your name here
-    super(counter, TheGridReaper.class.getName());
+    super(counter,FiverIfYouVoteThisName.class.getName());
 
   }
 
