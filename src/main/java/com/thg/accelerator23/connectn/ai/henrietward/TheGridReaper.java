@@ -6,35 +6,38 @@ import java.util.Random;
 import com.thehutgroup.accelerator.connectn.player.*;
 
 
-public class SerenaFourliams extends Player {
+public class TheGridReaper extends Player {
   private boolean isFirstMove = true;
 
-  public SerenaFourliams(Counter counter, String name) {
+  public TheGridReaper(Counter counter, String name) {
     //TODO: fill in your name here
-    super(counter, SerenaFourliams.class.getName());
+    super(counter, TheGridReaper.class.getName());
 
   }
 
   @Override
   public int makeMove(Board board) {
-    long startTime = System.currentTimeMillis();
+    long startTime= System.currentTimeMillis();
     List<String> messages = List.of(
-            "You might be the worst player I've ever seen",
-            "This is embarrassing.... ",
-            "If I were you, I'd end it all",
-            "That move was genuinely dreadful",
-            "Engaging Supercharged Engineering Powers",
-            "Even when I'm not in the office, I'm in it",
-            "Have I won yet?",
-            "If I win, its because of Ed; if I lose, its because of Hettie",
-            "Your name is not as good as mine",
-            "Were these print statements worth the lost time? Absolutely."
+            "YOU MIGHT BE THE WORST PLAYER I'VE EVER SEEN",
+            "THIS IS EMBARRASSING....",
+            "IF I WERE YOU, I'D END IT ALL",
+            "THAT MOVE WAS GENUINELY DREADFUL",
+            "ENGAGING SUPERCHARGED ENGINEERING POWERS",
+            "EVEN WHEN I'M NOT IN THE OFFICE, I'M IN IT",
+            "HAVE I WON YET?",
+            "IF I WIN, IT'S BECAUSE OF ED; IF I LOSE, IT'S BECAUSE OF HETTIE",
+            "YOUR NAME IS NOT AS GOOD AS MINE",
+            "WERE THESE PRINT STATEMENTS WORTH THE LOST TIME? ABSOLUTELY."
     );
 
-    Random random = new Random();
-    String randomMessage = messages.get(random.nextInt(messages.size()));
+    Random random=new Random();
+    String randomMessage= messages.get(random.nextInt(messages.size()));
 
-    System.out.println("SerenaFourliams: " + randomMessage);
+    String boldRed="\u001B[1;91m";
+    String reset="\u001B[0m";
+    System.out.println(boldRed + ">>> *** " + randomMessage + " *** <<<" + reset);
+
     int bestMove = -1;
     int bestValue = Integer.MIN_VALUE;
     Counter counter = this.getCounter();
