@@ -21,14 +21,19 @@ public class TheGridReaper extends Player {
     List<String> messages = List.of(
             "YOU MIGHT BE THE WORST PLAYER I'VE EVER SEEN",
             "THIS IS EMBARRASSING....",
-            "IF I WERE YOU, I'D END IT ALL",
+            "UR DA SELLS AVON",
             "THAT MOVE WAS GENUINELY DREADFUL",
             "ENGAGING SUPERCHARGED ENGINEERING POWERS",
             "EVEN WHEN I'M NOT IN THE OFFICE, I'M IN IT",
             "HAVE I WON YET?",
             "IF I WIN, IT'S BECAUSE OF ED; IF I LOSE, IT'S BECAUSE OF HETTIE",
             "YOUR NAME IS NOT AS GOOD AS MINE",
-            "WERE THESE PRINT STATEMENTS WORTH THE LOST TIME? ABSOLUTELY."
+            "WERE THESE PRINT STATEMENTS WORTH THE LOST TIME? ABSOLUTELY.",
+            "IS JACK FRENCH IN YET?",
+            "IS JACK LAWLESS IN YET?",
+            "I BET YOURS IS MAINLY CHATGPT",
+            "OUR BOT IS SO BAD, YOU PROBABLY WON'T EVEN READ THESE"
+
     );
 
     Random random=new Random();
